@@ -7,6 +7,7 @@ from datetime import datetime  # ← ДОБАВИТЕ ЭТУ СТРОКУ
 TOKEN = '8633982841:AAGtXkOnw3SAKjz_HaKR5IFYoaFEKn8e2ZA'
 FILE_PATH = 'v.1.1.070326 Spreads Names 2026.xlsx'  # Файл в той же папке
 SHEET_NAME = 'CME Data'     # ← ЗДЕСЬ УКАЖИТЕ НАЗВАНИЕ ВАШЕГО ЛИСТА
+SHEET_NAME_2 = 'Spreads'
 bot = telebot.TeleBot(TOKEN)
 
 
@@ -33,13 +34,70 @@ except Exception as e:
     df = pd.DataFrame()
 
 
-@bot.message_handler(commands=['start'])
-def start(message):
+@bot.message_handler(commands=['BuildSpread'])
+def BuildSpread(message):
     bot.reply_to(message, 
         f'✅ Бот готов к работе!\n\n'
         f'📤 Формат ответа: MOEX - CME // Expiration of Spread\n\n'
         f'💬 Отправьте тикер MOEX вида NG-1.23 (в верхнем регистре)'
     )
+
+@bot.message_handler(commands=['faq'])
+def faq_command(message):
+    faq_text = """
+🔍 **ПОИСК ПО БД тикеров**
+
+📋 **Как пользоваться:**
+• /BuildSpread — запуск бота
+•      Введите тикер MOEX (например, GOLD-6.26)
+•      Пока придется учитывать регистр и вводить заглавные буквы
+•      Получите все доступные вторые ноги
+• /SpreadTView — запуск бота
+•      Введите тикер MOEX (например, GOLD-6.26)
+•      Пока придется учитывать регистр и вводить заглавные буквы
+•      Получите код наиболее подходящего спреда для TView
+
+📊 **Формат ответа:**
+• Нога №1 MOEX - Нога №2 CME // Дата экспирации спреда
+• Экспирацией будет считаться наиболее ранняя из 4х дат:
+• • Дата экспирации на MOEX
+• • Last Trade Date на CME
+• • Settlement Date на CME
+• • First Notice Date на CME
+• Ноги на CME будут подбираться до даты экспирации на MOEX, но не позднее нее
+• На CME за дату экспирации берется самая ранняя из 3х дат, указанных выше
+
+❓ **Примеры:**
+GOLD-6.26 → найдет точное совпадение по названия первой ноги и подберет доступные вторые ноги
+"""
+    bot.reply_to(message, faq_text)
+
+# НОВЫЙ ПОИСК — другой лист, другая команда
+@bot.message_handler(commands=['SpreadTView'])  
+def SpreadTView_command(message):
+    query = message.text.replace('/SpreadTView', '').strip()
+    
+    if not query:
+        bot.reply_to(message, "❌ Укажите значение после /SpreadTView\nПример: /SpreadTView NG-1.23")
+        return
+    
+    try:
+        df2 = pd.read_excel(FILE_PATH, sheet_name=SHEET_NAME_2)  # ← ИЗМЕНИТЕ 'Лист2'
+        matches2 = df2[df2.iloc[:, 0].astype(str) == query]   # ← ИЗМЕНИТЕ НОМЕР СТОЛБЦА если нужно
+        
+        if not matches2.empty:
+            results2 = []
+            for _, row in matches2.iterrows():
+                i_val = format_date(row.iloc[5])   # ← ИЗМЕНИТЕ столбцы под ваш лист
+                j_val = format_date(row.iloc[6])
+                line = f"{i_val} // {j_val}"
+                results2.append(line)
+            bot.reply_to(message, f'✅ Найдено ({len(results2)} совпадений):\n' + '\n'.join(results2))
+        else:
+            bot.reply_to(message, f'❌ "{query}" не найдено совпадений')
+    except Exception as e:
+        bot.reply_to(message, f"❌ Ошибка TView: {str(e)}")
+
 
 @bot.message_handler(func=lambda msg: True)
 def search(message):
@@ -81,32 +139,6 @@ def search(message):
         bot.reply_to(message, response)
     else:
         bot.reply_to(message, f'❌ Значение "{query}" не найдено')
-
-@bot.message_handler(commands=['faq'])
-def faq_command(message):
-    faq_text = """
-🔍 **ПОИСК ПО БД тикеров**
-
-📋 **Как пользоваться:**
-• /start — запуск бота
-• Введите тикер MOEX (например, GOLD-6.26)
-• Пока придется учитывать регистр и вводить заглавные буквы
-
-📊 **Формат ответа:**
-• Нога №1 MOEX - Нога №2 CME // Дата экспирации спреда
-• Экспирацией будет считаться наиболее ранняя из 4х дат:
-• • Дата экспирации на MOEX
-• • Last Trade Date на CME
-• • Settlement Date на CME
-• • First Notice Date на CME
-• Ноги на CME будут подбираться до даты экспирации на MOEX, но не позднее нее
-• На CME за дату экспирации берется самая ранняя из 3х дат, указанных выше
-
-❓ **Примеры:**
-GOLD-6.26 → найдет точное совпадение по названия первой ноги и подберет доступные вторые ноги
-"""
-    bot.reply_to(message, faq_text)
-
 
 if __name__ == '__main__':
     print("🚀 Telegram Excel Bot запущен!")
