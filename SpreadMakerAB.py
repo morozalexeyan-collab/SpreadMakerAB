@@ -37,9 +37,8 @@ except Exception as e:
 def start(message):
     bot.reply_to(message, 
         f'✅ Бот готов к работе!\n\n'
-        f'📤 Формат ответа: I - J // A - F // K\n'
-        f'📈 Строк в таблице: {len(df)}\n\n'
-        f'💬 Отправьте тикер MOEX вида NG-1.23'
+        f'📤 Формат ответа: MOEX - CME // Expiration of Spread\n\n'
+        f'💬 Отправьте тикер MOEX вида NG-1.23 (в верхнем регистре)'
     )
 
 @bot.message_handler(func=lambda msg: True)
