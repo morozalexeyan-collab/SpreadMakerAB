@@ -1,11 +1,28 @@
 import telebot
 import pandas as pd
 import os
+from datetime import datetime  # ← ДОБАВИТЕ ЭТУ СТРОКУ
+
 
 TOKEN = '8633982841:AAGtXkOnw3SAKjz_HaKR5IFYoaFEKn8e2ZA'
 FILE_PATH = 'v.1.1.070326 Spreads Names 2026.xlsx'  # Файл в той же папке
 SHEET_NAME = 'CME Data'     # ← ЗДЕСЬ УКАЖИТЕ НАЗВАНИЕ ВАШЕГО ЛИСТА
 bot = telebot.TeleBot(TOKEN)
+
+
+# Функция для форматирования даты
+def format_date(date_value):
+    if pd.isna(date_value):
+        return ""
+    try:
+        if isinstance(date_value, str):
+            date_obj = pd.to_datetime(date_value)
+        else:
+            date_obj = pd.to_datetime(date_value)
+        return date_obj.strftime('%d.%m.%Y')  # 19.06.2026
+    except:
+        return str(date_value)  # Если не дата, оставляем как есть
+
 
 # Загрузка данных
 try:
@@ -14,6 +31,7 @@ try:
 except Exception as e:
     print(f"❌ Ошибка загрузки: {e}")
     df = pd.DataFrame()
+
 
 @bot.message_handler(commands=['start'])
 def start(message):
@@ -44,13 +62,13 @@ def search(message):
         results = []
         for _, row in matches.iterrows():
             # Формируем строку: I - J // A - F // K
-            i_val = str(row.iloc[COL_I]) if pd.notna(row.iloc[COL_I]) else ''
-            j_val = str(row.iloc[COL_J]) if pd.notna(row.iloc[COL_J]) else ''
-            a_val = str(row.iloc[COL_A]) if pd.notna(row.iloc[COL_A]) else ''
-            f_val = str(row.iloc[COL_F]) if pd.notna(row.iloc[COL_F]) else ''
-            k_val = str(row.iloc[COL_K]) if pd.notna(row.iloc[COL_K]) else ''
+            i_val = format_date(row.iloc[8])
+            j_val = format_date(row.iloc[9])
+            a_val = format_date(row.iloc[0])
+            f_val = format_date(row.iloc[5])
+            k_val = format_date(row.iloc[10])
             
-            result_line = f"{i_val} - {j_val} // {a_val} - {f_val} // {k_val}"
+            result_line = f"{i_val} - {a_val} // {k_val}"
             results.append(result_line)
         
         # Отправляем результат
