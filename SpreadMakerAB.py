@@ -34,25 +34,25 @@ except Exception as e:
     df = pd.DataFrame()
 
 
-@bot.message_handler(commands=['BuildSpread'])
-def BuildSpread(message):
+@bot.message_handler(commands=['spread'])
+def spread(message):
     bot.reply_to(message, 
         f'✅ Бот готов к работе!\n\n'
         f'📤 Формат ответа: MOEX - CME // Expiration of Spread\n\n'
         f'💬 Отправьте тикер MOEX вида NG-1.23 (в верхнем регистре)'
     )
 
-@bot.message_handler(commands=['faq'])
-def faq_command(message):
+@bot.message_handler(commands=['start'])
+def start_command(message):
     faq_text = """
 🔍 **ПОИСК ПО БД тикеров**
 
 📋 **Как пользоваться:**
-• /BuildSpread — запуск бота
+• /spread — запуск бота
 •      Введите тикер MOEX (например, GOLD-6.26)
 •      Пока придется учитывать регистр и вводить заглавные буквы
 •      Получите все доступные вторые ноги
-• /SpreadTView — запуск бота
+• /tview — запуск бота
 •      Введите тикер MOEX (например, GOLD-6.26)
 •      Пока придется учитывать регистр и вводить заглавные буквы
 •      Получите код наиболее подходящего спреда для TView
@@ -72,6 +72,34 @@ GOLD-6.26 → найдет точное совпадение по названи
 """
     bot.reply_to(message, faq_text)
 
+# НОВЫЙ ПОИСК — другой лист, другая команда
+@bot.message_handler(commands=['tview'])  
+def tview_command(message):
+    query = message.text.replace('/tview', '').strip()
+    
+    if not query:
+        bot.reply_to(message, "❌ Укажите значение после /tview\nПример: /tview NG-1.23")
+        return
+    
+    try:
+        df2 = pd.read_excel('data.xlsx', sheet_name='Лист2')  # ← ИЗМЕНИТЕ 'Лист2'
+        matches2 = df2[df2.iloc[:, 8].astype(str) == query]   # ← ИЗМЕНИТЕ НОМЕР СТОЛБЦА если нужно
+        
+        if not matches2.empty:
+            results2 = []
+            for _, row in matches2.iterrows():
+                i_val = format_date(row.iloc[8])   # ← ИЗМЕНИТЕ столбцы под ваш лист
+                j_val = format_date(row.iloc[9])
+                a_val = format_date(row.iloc[0])
+                f_val = format_date(row.iloc[5])
+                k_val = format_date(row.iloc[10])
+                line = f"{i_val} - {j_val} // {a_val} - {f_val} // {k_val}"
+                results2.append(line)
+            bot.reply_to(message, f'✅ **ЛИСТ 2** ({len(results2)} совпадений):\n' + '\n'.join(results2))
+        else:
+            bot.reply_to(message, f'❌ "{query}" не найдено на Листе 2')
+    except Exception as e:
+        bot.reply_to(message, f"❌ Ошибка Листа 2: {str(e)}")
 
 @bot.message_handler(func=lambda msg: True)
 def search(message):
