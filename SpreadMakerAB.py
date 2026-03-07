@@ -56,8 +56,8 @@ def search(message):
     COL_K = 10       # K
     
     # ТОЧНЫЙ поиск ВСЕХ совпадений в столбце I
-    # matches = df[df.iloc[:, SEARCH_COL].astype(str) == query]
-    matches = df[df.iloc[:, SEARCH_COL].astype(str).str.lower() == query.lower()]
+    matches = df[df.iloc[:, SEARCH_COL].astype(str) == query]
+    # matches = df[df.iloc[:, SEARCH_COL].astype(str).str.lower() == query.lower()]
     
     if not matches.empty:
         results = []
