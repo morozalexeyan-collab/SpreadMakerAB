@@ -75,31 +75,29 @@ GOLD-6.26 → найдет точное совпадение по названи
 # НОВЫЙ ПОИСК — другой лист, другая команда
 @bot.message_handler(commands=['tview'])  
 def tview_command(message):
-    query = message.text.replace('/tview', '').strip()
+    #query = message.text.replace('/tview', '').strip()
+    query = message.text.strip()
     
     if not query:
-        bot.reply_to(message, "❌ Укажите значение после /tview\nПример: /tview NG-1.23")
+        bot.reply_to(message, "❌ Укажите значение\nПример: NG-1.23")
         return
     
     try:
-        df2 = pd.read_excel('data.xlsx', sheet_name='Лист2')  # ← ИЗМЕНИТЕ 'Лист2'
-        matches2 = df2[df2.iloc[:, 8].astype(str) == query]   # ← ИЗМЕНИТЕ НОМЕР СТОЛБЦА если нужно
+        df2 = pd.read_excel(FILE_PATH, sheet_name=SHEET_NAME_2) # ← ИЗМЕНИТЕ 'Лист2'
+        matches2 = df2[df2.iloc[:, 0].astype(str) == query]   # ← ИЗМЕНИТЕ НОМЕР СТОЛБЦА если нужно
         
         if not matches2.empty:
             results2 = []
             for _, row in matches2.iterrows():
-                i_val = format_date(row.iloc[8])   # ← ИЗМЕНИТЕ столбцы под ваш лист
-                j_val = format_date(row.iloc[9])
-                a_val = format_date(row.iloc[0])
-                f_val = format_date(row.iloc[5])
-                k_val = format_date(row.iloc[10])
-                line = f"{i_val} - {j_val} // {a_val} - {f_val} // {k_val}"
+                i_val = format_date(row.iloc[5])   # ← ИЗМЕНИТЕ столбцы под ваш лист
+                j_val = format_date(row.iloc[6])
+                line = f"{i_val} // {j_val}"
                 results2.append(line)
-            bot.reply_to(message, f'✅ **ЛИСТ 2** ({len(results2)} совпадений):\n' + '\n'.join(results2))
+            bot.reply_to(message, f'✅ Найдено ({len(results2)} совпадений):\n' + '\n'.join(results2))
         else:
-            bot.reply_to(message, f'❌ "{query}" не найдено на Листе 2')
+            bot.reply_to(message, f'❌ "{query}" не найдено совпадений')
     except Exception as e:
-        bot.reply_to(message, f"❌ Ошибка Листа 2: {str(e)}")
+        bot.reply_to(message, f"❌ Ошибка TView: {str(e)}")
 
 @bot.message_handler(func=lambda msg: True)
 def search(message):
