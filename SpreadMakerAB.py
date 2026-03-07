@@ -80,7 +80,33 @@ def search(message):
             
         bot.reply_to(message, response)
     else:
-        bot.reply_to(message, f'❌ Значение "{query}" не найдено в столбце I')
+        bot.reply_to(message, f'❌ Значение "{query}" не найдено')
+
+@bot.message_handler(commands=['faq'])
+def faq_command(message):
+    faq_text = """
+🔍 **ПОИСК ПО БД тикеров**
+
+📋 **Как пользоваться:**
+• /start — запуск бота
+• Введите тикер MOEX (например, GOLD-6.26)
+• Пока придется учитывать регистр и вводить заглавные буквы
+
+📊 **Формат ответа:**
+• Нога №1 MOEX - Нога №2 CME // Дата экспирации спреда
+• Экспирацией будет считаться наиболее ранняя из 4х дат:
+• • Дата экспирации на MOEX
+• • Last Trade Date на CME
+• • Settlement Date на CME
+• • First Notice Date на CME
+• Ноги на CME будут подбираться до даты экспирации на MOEX, но не позднее нее
+• На CME за дату экспирации берется самая ранняя из 3х дат, указанных выше
+
+❓ **Примеры:**
+GOLD-6.26 → найдет точное совпадение по названия первой ноги и подберет доступные вторые ноги
+"""
+    bot.reply_to(message, faq_text)
+
 
 if __name__ == '__main__':
     print("🚀 Telegram Excel Bot запущен!")
