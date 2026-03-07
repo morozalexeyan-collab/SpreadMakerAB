@@ -72,32 +72,6 @@ GOLD-6.26 → найдет точное совпадение по названи
 """
     bot.reply_to(message, faq_text)
 
-# НОВЫЙ ПОИСК — другой лист, другая команда
-@bot.message_handler(commands=['SpreadTView'])  
-def SpreadTView_command(message):
-    query = message.text.replace('/SpreadTView', '').strip()
-    
-    if not query:
-        bot.reply_to(message, "❌ Укажите значение после /SpreadTView\nПример: /SpreadTView NG-1.23")
-        return
-    
-    try:
-        df2 = pd.read_excel(FILE_PATH, sheet_name=SHEET_NAME_2)  # ← ИЗМЕНИТЕ 'Лист2'
-        matches2 = df2[df2.iloc[:, 0].astype(str) == query]   # ← ИЗМЕНИТЕ НОМЕР СТОЛБЦА если нужно
-        
-        if not matches2.empty:
-            results2 = []
-            for _, row in matches2.iterrows():
-                i_val = format_date(row.iloc[5])   # ← ИЗМЕНИТЕ столбцы под ваш лист
-                j_val = format_date(row.iloc[6])
-                line = f"{i_val} // {j_val}"
-                results2.append(line)
-            bot.reply_to(message, f'✅ Найдено ({len(results2)} совпадений):\n' + '\n'.join(results2))
-        else:
-            bot.reply_to(message, f'❌ "{query}" не найдено совпадений')
-    except Exception as e:
-        bot.reply_to(message, f"❌ Ошибка TView: {str(e)}")
-
 
 @bot.message_handler(func=lambda msg: True)
 def search(message):
