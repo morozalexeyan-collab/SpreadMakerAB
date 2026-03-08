@@ -13,17 +13,17 @@ SHEET_NAME = 'CME Data'
 SHEET_NAME_2 = 'Spreads'
 bot = telebot.TeleBot(TOKEN)
 
-# 🔥 FLASK HEALTH-CHECK (РЕШАЕТ 409 CONFLICT)
+# 🔥 FLASK HEALTH-CHECK (ИСПРАВЛЕННЫЙ!)
 app = Flask(__name__)
 
 @app.route('/')
 @app.route('/health')
 def health():
-    return "OK"
+    return {"status": "ok"}, 200  # ← JSON ответ!
 
 def run_flask():
-    port = int(os.environ.get('PORT', 10000))
-    app.run(host='0.0.0.0', port=port)
+    port = int(os.environ.get('PORT', 10000))  # ← Render PORT!
+    app.run(host='0.0.0.0', port=port, debug=False)  # ← 0.0.0.0 + debug=False
 
 flask_thread = threading.Thread(target=run_flask, daemon=True)
 flask_thread.start()
@@ -107,7 +107,7 @@ def start_tickers(message):
     bot.reply_to(message, """
 🔍 **SPREADMAKER AB**
 
-📋 **Список доступных тикеров:**
+📋 **Список доступных БА на MOEX:**
 BR
 BTC
 ED
@@ -163,7 +163,7 @@ def handle_message(message):
                         j_val = format_date(row.iloc[6])
                         line = f"{i_val} // {j_val}"
                         results2.append(line)
-                    bot.reply_to(message, f'✅ *TVIEW* Найдено:({len(results2)}\n' + '\n'.join(results2))
+                    bot.reply_to(message, f'✅ *TVIEW* Найдено: {len(results2)}\n' + '\n'.join(results2))
                 else:
                     bot.reply_to(message, f'❌ "{message.text.strip()}" → "{query}" не найдено (TView)')
             except Exception as e:
