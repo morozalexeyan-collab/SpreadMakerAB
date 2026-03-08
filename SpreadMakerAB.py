@@ -5,6 +5,7 @@ from datetime import datetime
 import threading
 from flask import Flask  # ← Health-check для Render
 import time
+import sys
 
 TOKEN = os.getenv('TOKEN')  # ← ENV переменная!
 FILE_PATH = 'v.1.1.070326 Spreads Names 2026.xlsx'
@@ -47,6 +48,7 @@ except Exception as e:
     print(f"❌ Ошибка: {e}")
     df = pd.DataFrame()
 
+
 @bot.message_handler(commands=['spread'])
 def spread_start(message):
     user_id = message.from_user.id
@@ -79,11 +81,28 @@ def start_help(message):
 ✅ **Даты:** 19.06.2026
     """)
 
+@bot.message_handler(commands=['tickers'])
+def start_tickers(message):
+    bot.reply_to(message, """
+🔍 **SPREADMAKER AB**
+
+📋 **Примеры тикеров:**
+GOLD
+SILV
+NG
+BR                
+    """)
+
+@bot.message_handler(commands=['restart'])  # ← ЛЮБОЙ пользователь!
+def restart_command(message):
+    bot.reply_to(message, "🔄 Перезапуск бота для всех...")
+    os.execv(sys.executable, ['python'] + sys.argv)
+
 # 🎯 ОСНОВНОЙ ОБРАБОТЧИК — ловит ввод ПОСЛЕ команд
 @bot.message_handler(func=lambda msg: True)
 def handle_message(message):
     user_id = message.from_user.id
-    query = message.text.strip()
+    query = message.text.strip().upper()  # 🔥 ИЗМЕНЕНИЕ 1: ВСЕГДА БОЛЬШИЕ БУКВЫ
     
     # Проверяем состояние пользователя
     if user_id in user_state:
@@ -91,7 +110,7 @@ def handle_message(message):
         
         if mode == 'spread':
             # 🔍 СПРЕДЫ (Лист 1)
-            matches = df[df.iloc[:, 8].astype(str) == query]
+            matches = df[df.iloc[:, 8].astype(str).str.upper() == query]  # 🔥 ИЗМЕНЕНИЕ 2
             if not matches.empty:
                 results = []
                 for _, row in matches.iterrows():
@@ -100,15 +119,15 @@ def handle_message(message):
                     k_val = format_date(row.iloc[10])
                     result_line = f"{i_val} - {a_val} // {k_val}"
                     results.append(result_line)
-                bot.reply_to(message, f'✅ **SPREAD** ({len(results)}):\n' + '\n'.join(results[:20]))
+                bot.reply_to(message, f'✅ *SPREAD* Найдено: {len(results)}\n' + '\n'.join(results[:20]))
             else:
-                bot.reply_to(message, f'❌ "{query}" не найдено (CME Data)')
+                bot.reply_to(message, f'❌ "{message.text.strip()}" → "{query}" не найдено (Spread)')
             
         elif mode == 'tview':
             # 🔍 TVIEW (Лист 2)
             try:
                 df2 = pd.read_excel(FILE_PATH, sheet_name=SHEET_NAME_2)
-                matches2 = df2[df2.iloc[:, 0].astype(str) == query]
+                matches2 = df2[df2.iloc[:, 0].astype(str).str.upper() == query]  # 🔥 ИГНОР РЕГИСТРА
                 if not matches2.empty:
                     results2 = []
                     for _, row in matches2.iterrows():
@@ -116,9 +135,9 @@ def handle_message(message):
                         j_val = format_date(row.iloc[6])
                         line = f"{i_val} // {j_val}"
                         results2.append(line)
-                    bot.reply_to(message, f'✅ **TVIEW** ({len(results2)}):\n' + '\n'.join(results2))
+                    bot.reply_to(message, f'✅ *TVIEW* Найдено:({len(results2)}\n' + '\n'.join(results2))
                 else:
-                    bot.reply_to(message, f'❌ "{query}" не найдено (Spreads)')
+                    bot.reply_to(message, f'❌ "{message.text.strip()}" → "{query}" не найдено (TView)')
             except Exception as e:
                 bot.reply_to(message, f"❌ TVIEW ошибка")
         
@@ -126,7 +145,7 @@ def handle_message(message):
         del user_state[user_id]
     else:
         # Нет режима — показываем меню
-        bot.reply_to(message, "❌ Неизвестная команда\n\n📋 /spread или /tview")
+        bot.reply_to(message, "❌ Неизвестная команда\n Выберите из доступных:\n\n📋 /spread или /tview")
 
 if __name__ == '__main__':
     print("🚀 Telegram Excel Bot запущен!")
