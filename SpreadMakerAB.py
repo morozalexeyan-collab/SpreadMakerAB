@@ -177,4 +177,10 @@ def handle_message(message):
 
 if __name__ == '__main__':
     print("🚀 Telegram Excel Bot запущен!")
-    bot.polling(none_stop=True, timeout=30)
+    while True:  # 🔥 БЕСКОНЕЧНЫЙ ЦИКЛ
+        try:
+            bot.polling(none_stop=True, timeout=20, long_polling_timeout=5)
+        except Exception as e:
+            print(f"⚠️ Polling ошибка: {e}")
+            print("🔄 Перезапуск через 10 сек...")
+            time.sleep(10)  # Ждем и пробуем снова
